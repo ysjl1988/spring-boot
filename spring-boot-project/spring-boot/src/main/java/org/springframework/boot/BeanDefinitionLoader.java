@@ -79,6 +79,7 @@ class BeanDefinitionLoader {
 		Assert.notNull(registry, "Registry must not be null");
 		Assert.notEmpty(sources, "Sources must not be empty");
 		this.sources = sources;
+		//这里定义了不同的bean定义的配置读取器，用来读取不同的配置方式的bean配置
 		this.annotatedReader = new AnnotatedBeanDefinitionReader(registry);
 		this.xmlReader = new XmlBeanDefinitionReader(registry);
 		if (isGroovyPresent()) {

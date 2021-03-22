@@ -298,9 +298,12 @@ public class SpringApplication {
 	public ConfigurableApplicationContext run(String... args) {
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
+		//创建context上线文
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
+		//java.awt.headless系统变量设置
 		configureHeadlessProperty();
+		//此处的listeners只有一个，为EventPublishingRunListener，实现也只有这一个
 		SpringApplicationRunListeners listeners = getRunListeners(args);
 		listeners.starting();
 		try {
@@ -308,10 +311,13 @@ public class SpringApplication {
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			configureIgnoreBeanInfo(environment);
 			Banner printedBanner = printBanner(environment);
+			//这里创建applicationContext，只是实例化，这里默认是使用的org.springframework.context.annotation.AnnotationConfigApplicationContext
 			context = createApplicationContext();
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
 					new Class[] { ConfigurableApplicationContext.class }, context);
+			//这里获取入口类并且进行load
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+			//这里会加载入口类，并且解析@SpringBootApplication的注解，此注解是复合注解，@EnableAutoConfiguration会metada/spring.factories下面的记录，进行自动配置
 			refreshContext(context);
 			afterRefresh(context, applicationArguments);
 			stopWatch.stop();
@@ -339,9 +345,14 @@ public class SpringApplication {
 	private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments) {
 		// Create and configure the environment
+		//根据webapplicationtype返回不同类型的Environment
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
+		//配置Environment
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
+		//添加configurationProperties的property到sources中
 		ConfigurationPropertySources.attach(environment);
+		//Environment环境准备，这里会读取配置文件
+		//1、EventPublishingRunListener组播事件出去
 		listeners.environmentPrepared(environment);
 		bindToSpringApplication(environment);
 		if (!this.isCustomEnvironment) {
@@ -368,6 +379,7 @@ public class SpringApplication {
 		context.setEnvironment(environment);
 		postProcessApplicationContext(context);
 		applyInitializers(context);
+		//发送事件ApplicationPreparedEvent，并触发执行器
 		listeners.contextPrepared(context);
 		if (this.logStartupInfo) {
 			logStartupInfo(context.getParent() == null);
@@ -387,9 +399,11 @@ public class SpringApplication {
 			context.addBeanFactoryPostProcessor(new LazyInitializationBeanFactoryPostProcessor());
 		}
 		// Load the sources
+		//这里的source是指main方法所在的主类
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
 		load(context, sources.toArray(new Object[0]));
+		//发送事件ApplicationPreparedEvent，并触发执行器
 		listeners.contextLoaded(context);
 	}
 
@@ -478,6 +492,7 @@ public class SpringApplication {
 			ConversionService conversionService = ApplicationConversionService.getSharedInstance();
 			environment.setConversionService((ConfigurableConversionService) conversionService);
 		}
+		//
 		configurePropertySources(environment, args);
 		configureProfiles(environment, args);
 	}
@@ -622,6 +637,7 @@ public class SpringApplication {
 		for (ApplicationContextInitializer initializer : getInitializers()) {
 			Class<?> requiredType = GenericTypeResolver.resolveTypeArgument(initializer.getClass(),
 					ApplicationContextInitializer.class);
+			//判断是否支持这个类型的参数传入
 			Assert.isInstanceOf(requiredType, context, "Unable to call initializer.");
 			initializer.initialize(context);
 		}
@@ -678,6 +694,7 @@ public class SpringApplication {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading source " + StringUtils.arrayToCommaDelimitedString(sources));
 		}
+		//getBeanDefinitionRegistry将最终返回强转过的ApplicationContext。也就是说BeanDefinition将被注册到ApplicationContext里面
 		BeanDefinitionLoader loader = createBeanDefinitionLoader(getBeanDefinitionRegistry(context), sources);
 		if (this.beanNameGenerator != null) {
 			loader.setBeanNameGenerator(this.beanNameGenerator);

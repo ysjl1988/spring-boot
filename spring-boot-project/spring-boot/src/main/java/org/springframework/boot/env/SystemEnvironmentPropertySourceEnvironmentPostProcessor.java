@@ -49,6 +49,7 @@ public class SystemEnvironmentPropertySourceEnvironmentPostProcessor implements 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 		String sourceName = StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME;
+//		这里拿到的都是系统参数，系统path定义的
 		PropertySource<?> propertySource = environment.getPropertySources().get(sourceName);
 		if (propertySource != null) {
 			replacePropertySource(environment, sourceName, propertySource);
@@ -56,6 +57,7 @@ public class SystemEnvironmentPropertySourceEnvironmentPostProcessor implements 
 	}
 
 	@SuppressWarnings("unchecked")
+	//把实际的47个参数放到environment对应sourcename(systemEnvironment)的properySourceList的具体propertySource的source内
 	private void replacePropertySource(ConfigurableEnvironment environment, String sourceName,
 			PropertySource<?> propertySource) {
 		Map<String, Object> originalSource = (Map<String, Object>) propertySource.getSource();
